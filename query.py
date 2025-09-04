@@ -17,24 +17,39 @@ def query_atnf(output_file: str = 'atnf.txt') -> int:
         logging.info('Querying ATNF database...')
         
         # Query the ATNF database
-        query = QueryATNF(params=['P0', 'P1', 'EDOT', 'XX', 'YY', 'DIST', 'ASSOC', 'BINARY', 'TYPE', 'P1_I'])
+        # url: https://www.atnf.csiro.au/research/pulsar/psrcat/psrcat_help.html
+        # P0:          Barycentric period of the pulsar (s)
+        # P1:          Time derivative of barycentric period (dimensionless)
+        # DM:          Dispersion measure (cm-3 pc)
+        # DIST:        Best estimate of the pulsar distance using the YMW16 DM-based distance as default (kpc)
+        # ZZ:          Distance from the Galactic plane, based on Dist
+        # XX:          X-Distance in X-Y-Z Galactic coordinate system (kpc)
+        # YY:          Y-Distance in X-Y-Z Galactic coordinate system (kpc)
+        # [DERIVED PARAMETERS]
+        # AGE:         Spin down age (yr) [tau = P0 / (2 * P1)]
+        # BSurf:       Surface magnetic flux density (Gauss) [B = 3.2 x 10^19 (P_0 P_1)^1/2]
+        # Edot:        Spin down energy loss rate (ergs/s)
+
+        query = QueryATNF(params=['P0', 'P1', 'DM', 'DIST', 'ZZ', 'XX', 'YY', 'TYPE'])
         t = query.table
         logging.info('Query successful!')
 
         # Write query results to the output file
         counter = 0
         with open(output_file, 'w') as file:
-            file.write(f'# P0 - P1 - EDOT - XX - YY\n')
+            file.write(f'# P0 - P1 - DIST - XX - YY - ZZ\n')
             for row in t:
                 P0 = row['P0']
                 P1 = row['P1']
-                EDOT = row['EDOT']
+                DIST = row['DIST']
                 XX = row['XX']
                 YY = row['YY']
-                
+                ZZ = row['ZZ']
+                TYPE = row['TYPE']
+
                 # Check for valid data entries and format the output
-                if P0 != '--' and P1 != '--' and EDOT != '--' and XX != '--' and YY != '--':
-                    file.write(f'{P0:10.5e} {P1:10.5e} {EDOT:10.5e} {XX:10.3e} {YY:10.3e}\n')
+                if P0 != '--' and P1 != '--' and DIST != '--':
+                    file.write(f'{P0:10.5e} {P1:10.5e} {DIST:10.3f} {XX:10.3f} {YY:10.3f} {ZZ:10.3f} {TYPE}\n')
                     counter += 1
 
         logging.info(f'Successfully saved {counter} objects to {output_file}.')

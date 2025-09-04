@@ -1,7 +1,37 @@
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Optional, Tuple
 
+from constants import MYR
+
+def calculate_ages(P0: np.ndarray, P1: np.ndarray) -> np.ndarray:
+    age = P0 / (2.0 * P1)
+    log_age = np.log10(age / MYR)
+    return log_age
+
+def compute_Edot(P0: np.ndarray, P1: np.ndarray) -> np.ndarray:
+    I = 1e45 # gr cm^2
+    E_dot = 4. * math.pi**2. * I * P1 / P0**3
+    return E_dot
+
+def Pdot_from_B(P0: np.ndarray, B: float) -> np.ndarray:
+    B_critical = 3.2e19  # Critical magnetic field strength in Gauss
+    Pdot = (B / B_critical)**2 / P0
+    return Pdot
+
+
+
+def load_data(filename):
+    """Load data from the file and handle errors."""
+    try:
+        P0, P1, DIST, XX, YY = np.loadtxt(filename, usecols=(0, 1, 2, 3, 4), unpack=True)
+        mask = P1 > 0
+        print(f'✅ {len(P0)} data loaded successfully.')
+        return P0[mask], P1[mask], DIST[mask], XX[mask], YY[mask]
+    except Exception as e:
+        print(f"Error loading data from {filename}: {e}")
+        return None, None, None, None, None
 
 def savefig(fig: plt.Figure, filename: str, dpi: int = 300, bbox_inches: str = 'tight', pad_inches: float = 0.1, transparent: bool = False) -> None:
     """
@@ -16,8 +46,8 @@ def savefig(fig: plt.Figure, filename: str, dpi: int = 300, bbox_inches: str = '
     - transparent: Whether to save the plot with a transparent background (default is False).
     """
     try:
-        fig.savefig(filename, dpi=dpi, bbox_inches=bbox_inches, pad_inches=pad_inches, transparent=transparent, format='pdf')
-        print(f'Plot successfully saved to {filename} with dpi={dpi}, bbox_inches={bbox_inches}, pad_inches={pad_inches}, transparent={transparent}')
+        fig.savefig(f'figs/{filename}', dpi=dpi, bbox_inches=bbox_inches, pad_inches=pad_inches, transparent=transparent, format='pdf')
+        print(f'Plot successfully saved to figs/{filename} with dpi={dpi}, bbox_inches={bbox_inches}, pad_inches={pad_inches}, transparent={transparent}')
     except Exception as e:
         print(f"Error saving plot to {filename}: {e}")
 

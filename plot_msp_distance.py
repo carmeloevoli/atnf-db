@@ -15,7 +15,7 @@ def plot_galactic_plane(output_file='msp_galactic_plane.pdf', cmap='jet'):
     set_axes(ax, xlabel='x [kpc]', ylabel='y [kpc]', xscale='linear', yscale='linear', xlim=[-15, 15], ylim=[-15, 15])
 
     # Load data from file
-    P0, P1, DIST, XX, YY = load_data('atnf.txt')
+    P0, P1, DIST, XX, YY = load_data('output/atnf.txt')
 
     # Calculate log10 of age in Myr
     log_age = calculate_ages(P0, P1)
@@ -70,8 +70,17 @@ def plot_galactic_plane(output_file='msp_galactic_plane.pdf', cmap='jet'):
     circle = plt.Circle((-8, 0), 5, color='tab:gray', fill=False, lw=1, ls='--')
     ax.add_artist(circle)
 
-    #for i in range(len(XX)):
-    #    print(f'{P0[i]}, {P1[i]}, {DIST[i]}, {XX[i]}, {YY[i]}, {LOGAGE[i]:.1f}')
+    FLUX = EDOT / DIST**2 # in arbitrary units
+    sort = np.argsort(FLUX)[::-1]
+    # write top 100 sources by flux to a file
+    out_name = 'output/top100_sources.txt'
+    with open(out_name, 'w') as f:
+        f.write("rank dist[kpc] age[Myr] EDOT[erg/s]\n")
+        for rank in range(min(100, len(sort))):
+            idx = sort[rank]
+            age = 10**log_age[idx]
+            f.write(f"{rank+1} {DIST[idx]:.3f} {age:.1f} {EDOT[idx]:.1e}\n")
+    print(f"Top 100 source list by flux (EDOT/DIST^2) written to {out_name}")
 
     # Save the figure
     savefig(fig, output_file)
